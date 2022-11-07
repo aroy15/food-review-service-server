@@ -15,13 +15,21 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@clu
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 async function run(){
     try{
-        const serviceCollection = client.db('foodService').collection('foodItems');
+        const serviceCollection = client.db('foodService').collection('services');
         const service = {
-            foodItem:'vagitable',
-            price:'30'
+            foodItem:'rice',
+            price:'10'
         }
         const result = await serviceCollection.insertOne(service)
         console.log(`food item inserted ${result}`)
+
+        // get data form database and send to client side
+        app.get('/services', async(req, res)=>{
+            const query = {};
+            const cursor = serviceCollection.find(query);
+            const result = await cursor.toArray();
+            res.send(result)
+        })
     }
     finally{
 
@@ -34,6 +42,7 @@ run().catch(err=>console.error(err))
 app.get('/',(req, res)=>{
     res.send('Food Delivery server is working')
 })
+
 
 app.listen(port, ()=>{
     console.log(`Food Delivery server is running on ${port}`)
