@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 require('dotenv').config()
 
@@ -16,18 +16,25 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run(){
     try{
         const serviceCollection = client.db('foodService').collection('services');
-        const service = {
-            foodItem:'rice',
-            price:'10'
-        }
-        const result = await serviceCollection.insertOne(service)
-        console.log(`food item inserted ${result}`)
-
         // get data form database and send to client side
         app.get('/services', async(req, res)=>{
+            const limitRequest = parseInt(req.query.limit);
             const query = {};
             const cursor = serviceCollection.find(query);
-            const result = await cursor.toArray();
+            let result = '';
+            if(limitRequest){
+                result = await cursor.limit(limitRequest).toArray()
+            }else{
+                result =  await cursor.toArray()
+            }
+            res.send(result)
+        })
+
+        // get single data
+        app.get('/services/:id', async(req, res)=>{
+            const id = req.params.id;
+            const query = {_id:ObjectId(id)};
+            const result = await serviceCollection.findOne(query);
             res.send(result)
         })
     }
